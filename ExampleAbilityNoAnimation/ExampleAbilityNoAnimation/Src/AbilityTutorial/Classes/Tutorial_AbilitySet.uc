@@ -70,6 +70,9 @@ static function X2AbilityTemplate AddPersonalShieldAbility() //this is the funct
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState; //This is very important, no skill will work with out effecting the game state
 	                                                              //All the events need to look into something called the "History" or an over view of everything that
 																  // has happened on the last few turns, with out this our effect managers won't be able to call anything
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+	Template.bSkipFireAction = true; // If true, ability will not exit cover/fire/enter cover when activated.
+	Template.bShowActivation = true; // If true, ability will automatically show its name over the activating unit's head when used.
 
 	return Template; 
 
