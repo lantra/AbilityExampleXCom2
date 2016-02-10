@@ -10,6 +10,7 @@ class Tutorial_AbilitySet extends X2Ability
 var config int SHIELD_CHARGES;
 var config int SHIELD_DURATION;
 var config int SHIELD_POWER;
+var config int PASSIVE_SHIELD_POWER;
 
 //The following function generates the templates for the abilities, in short templates are what game uses to generate abilities, units and everything else
 //More reading is available in the SDK documentation
@@ -18,8 +19,8 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 	
-	Templates.AddItem(AddPersonalShieldAbility()); //Each ability we create needs to be added to this array, it consists of function we will make to 
-												   // define the ability
+	Templates.AddItem(AddPersonalShieldAbility()); //Each ability we create needs to be added to this array, it consists of function we will make to define the ability
+	Templates.Additem(AddPassiveShieldAbility()); 
 
 	return Templates;
 }
@@ -92,4 +93,43 @@ static function X2Effect_PersistentStatChange CreateShieldedEffect(string Friend
 
 	return ShieldedEffect;
 
+}
+
+//Keeping with the shield them for now, The next ability will be a passive that adds 2 shield to our hero as a passive. 
+static function X2AbilityTemplate AddPassiveShieldAbility()
+{
+	local X2AbilityTemplate						Template;
+	local X2AbilityTargetStyle                  TargetStyle;
+	local X2AbilityTrigger						Trigger;
+	local X2Effect_PersistentStatChange         ShieldEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'PassiveShield');
+
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_NeverShow;
+	Template.Hostility = eHostility_Neutral;
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_body_shield"; 
+
+	Template.AbilityToHitCalc = default.DeadEye; //Dead eye means the ability can't miss
+
+	TargetStyle = new class'X2AbilityTarget_Self';
+	Template.AbilityTargetStyle = TargetStyle;
+
+	Trigger = new class'X2AbilityTrigger_UnitPostBeginPlay'; //This is the trigger, or when our ability fires, we can modify this to work on certain events
+	Template.AbilityTriggers.AddItem(Trigger);
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	//  NOTE: No visualization on purpose!
+
+	Template.bCrossClassEligible = true; //this can be a bonus from the AWC
+
+	ShieldEffect = new class 'X2Effect_PersistentStatChange';
+	ShieldEffect.EffectName = 'PassiveShield';
+	ShieldEffect.BuildPersistentEffect(1, true, true, false); //The first Parameter is askign the for the duration of the effect, never set this to 0, the second parameter is 
+	                                                                         //for the the infinite duration, since it's a passive ability,  third parameter is to remove it when the unit dies, the fourth is watching for a rule change
+	ShieldEffect.AddPersistentStatChange(eStat_ShieldHP, default.PASSIVE_SHIELD_POWER);
+	Template.AddTargetEffect(ShieldEffect); 
+
+
+	return Template;
 }
